@@ -15,6 +15,7 @@ import com.android.volley.toolbox.Volley
 import com.squareup.picasso.Picasso
 import org.json.JSONObject
 import java.io.File
+import java.io.FileOutputStream
 
 // TODO (1: Fix any bugs)
 // TODO (2: Add function saveComic(...) to save and load comic info automatically when app starts)
@@ -49,10 +50,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun downloadComic (comicId: String) {
         val url = "https://xkcd.com/$comicId/info.0.json"
-        requestQueue.add (
-            JsonObjectRequest(url, {showComic(it)}, {
-            })
-        )
+        val comicName = "$comicId"
+        var comicFile = File(filesDir, comicName)
+        if (comicFile.exists()){
+            showComic(JSONObject(comicFile.readText()))
+        } else{
+            requestQueue.add(
+                JsonObjectRequest(url, {
+                    saveComic(it)
+                    showComic(it) }, {
+                })
+            )
+        }
     }
 
     private fun showComic (comicObject: JSONObject) {
@@ -64,6 +73,9 @@ class MainActivity : AppCompatActivity() {
         val comicId = comicObject.getString("num")
         val comicName = "$comicId"
         var comicFile = File(filesDir, comicName)
+        val outputStream = FileOutputStream(comicFile)
+        outputStream.write(comicObject.toString().toByteArray())
+        outputStream.close()
     }
 
 }
